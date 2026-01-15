@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>InfoBot (RP Demo)</title>
+  <style>
+    body { font-family: system-ui, sans-serif; background:#f5f6fa; margin:0; display:flex; justify-content:center; }
+    .wrap { width:min(720px, 100%); padding:18px; }
+    .card { background:#fff; border:1px solid #e8e8e8; border-radius:16px; padding:14px; }
+    #chat { height:60vh; overflow:auto; padding:10px; border-radius:14px; background:#fff; border:1px solid #eee; }
+    .msg { padding:10px 12px; border-radius:14px; margin:10px 0; max-width:90%; white-space:pre-wrap; }
+    .me { background:#e9f0ff; margin-left:auto; }
+    .bot { background:#f7f7f7; border:1px solid #eee; }
+    .row { display:flex; gap:10px; margin-top:12px; }
+    input { flex:1; padding:12px; border-radius:12px; border:1px solid #ddd; }
+    button { padding:12px 14px; border-radius:12px; border:1px solid #ddd; cursor:pointer; background:#fff; }
+    .top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+    .badge { font-size:12px; padding:4px 10px; border-radius:999px; background:#111; color:#fff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <h2 style="margin:0;">InfoBot: RP Demo</h2>
+      <span class="badge">Webhook → AI → Reply</span>
+    </div>
+
+    <div id="chat" class="card"></div>
+
+    <div class="row">
+      <input id="msg" placeholder="Ask something (e.g., Where is RP?)" />
+      <button id="send">Send</button>
+    </div>
+    <p style="color:#666; font-size:13px;">
+      Tip: If it says “CORS error”, we’ll fix with 1 setting in n8n or a proxy.
+    </p>
+  </div>
+
+<script>
+  // ✅ PASTE YOUR PRODUCTION URL HERE (must be /webhook/ not /webhook-test/)
+  const WEBHOOK_URL = "PASTE_PRODUCTION_WEBHOOK_URL_HERE";
+
+  const chat = document.getElementById("chat");
+  const input = document.getElementById("msg");
+  const btn = document.getElementById("send");
+
+  function add(text, who) {
+    const div = document.createElement("div");
+    div.className = "msg " + who;
+    div.textContent = text;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  async function send() {
+    const message = input.value.trim();
+    if (!message) return;
+    input.value = "";
+    add(message, "me");
+
+    const typing = document.createElement("div");
+    typing.className = "msg bot";
+    typing.textContent = "Typing…";
+    chat.appendChild(typing);
+    chat.scrollTop = chat.scrollHeight;
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+
+      const data = await res.json();
+      typing.textContent = data.reply || "(No reply returned)";
+    } catch (e) {
+      typing.textContent = "Error: couldn't reach webhook (likely CORS or workflow not active).";
+    }
+  }
+
+  btn.onclick = send;
+  input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
+
+  add("Hi! I’m InfoBot (RP). Ask me about RP stuff 😊", "bot");
+</script>
+</body>
+</html>
