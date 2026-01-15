@@ -5,45 +5,204 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>InfoBot (RP Demo)</title>
   <style>
-    body { font-family: system-ui, sans-serif; background:#f5f6fa; margin:0; display:flex; justify-content:center; }
-    .wrap { width:min(720px, 100%); padding:18px; }
-    .card { background:#fff; border:1px solid #e8e8e8; border-radius:16px; padding:14px; }
-    #chat { height:60vh; overflow:auto; padding:10px; border-radius:14px; background:#fff; border:1px solid #eee; }
-    .msg { padding:10px 12px; border-radius:14px; margin:10px 0; max-width:90%; white-space:pre-wrap; }
-    .me { background:#e9f0ff; margin-left:auto; }
-    .bot { background:#f7f7f7; border:1px solid #eee; }
-    .row { display:flex; gap:10px; margin-top:12px; }
-    input { flex:1; padding:12px; border-radius:12px; border:1px solid #ddd; }
-    button { padding:12px 14px; border-radius:12px; border:1px solid #ddd; cursor:pointer; background:#fff; }
-    .top { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
-    .badge { font-size:12px; padding:4px 10px; border-radius:999px; background:#111; color:#fff; }
+    :root{
+      --bg1:#f7f8ff;
+      --bg2:#ecfbff;
+      --card:#ffffffcc;
+      --border:#e9e9ef;
+      --text:#111827;
+      --muted:#6b7280;
+      --me:#e9f0ff;
+      --bot:#f7f7f7;
+      --shadow: 0 12px 40px rgba(0,0,0,0.08);
+      --radius:18px;
+    }
+    *{ box-sizing:border-box; }
+    body{
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      margin:0;
+      min-height:100vh;
+      display:flex;
+      justify-content:center;
+      background:
+        radial-gradient(900px 500px at 20% 10%, var(--bg2), transparent 60%),
+        radial-gradient(900px 500px at 80% 0%, #ffeef7, transparent 55%),
+        linear-gradient(180deg, var(--bg1), #ffffff);
+      color:var(--text);
+    }
+    .wrap{ width:min(760px, 100%); padding:18px; }
+    .top{
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:10px;
+    }
+    .title{
+      display:flex; align-items:center; gap:10px;
+    }
+    .logo{
+      width:42px; height:42px; border-radius:14px;
+      display:grid; place-items:center;
+      background: linear-gradient(135deg, #111827, #374151);
+      color:#fff; box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+      font-weight:700;
+    }
+    .badge{
+      font-size:12px; padding:6px 10px; border-radius:999px;
+      background:#111827; color:#fff;
+      display:flex; align-items:center; gap:6px;
+    }
+    .badge span{ opacity:.9; font-weight:600; }
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:var(--radius);
+      padding:14px;
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    #chat{
+      height:58vh;
+      overflow:auto;
+      padding:10px;
+      border-radius:16px;
+      background:#fff;
+      border:1px solid #eee;
+    }
+    .msg{
+      padding:10px 12px;
+      border-radius:16px;
+      margin:10px 0;
+      max-width:88%;
+      white-space:pre-wrap;
+      line-height:1.35;
+      animation: pop .16s ease-out;
+    }
+    @keyframes pop{
+      from{ transform: translateY(6px); opacity:.0; }
+      to{ transform: translateY(0); opacity:1; }
+    }
+    .me{
+      background:var(--me);
+      margin-left:auto;
+      border:1px solid #dbe6ff;
+    }
+    .bot{
+      background:var(--bot);
+      border:1px solid #eee;
+    }
+    .meta{
+      display:flex; justify-content:space-between; align-items:center;
+      gap:10px; margin:10px 2px 12px;
+      color:var(--muted); font-size:13px;
+    }
+    .chips{ display:flex; flex-wrap:wrap; gap:8px; }
+    .chip{
+      border:1px solid var(--border);
+      background:#fff;
+      padding:8px 10px;
+      border-radius:999px;
+      cursor:pointer;
+      font-size:13px;
+      transition: transform .08s ease, background .12s ease;
+      user-select:none;
+    }
+    .chip:hover{ background:#f8fafc; }
+    .chip:active{ transform: scale(0.98); }
+    .row{ display:flex; gap:10px; margin-top:12px; }
+    input{
+      flex:1;
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid #ddd;
+      outline:none;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.02);
+    }
+    input:focus{ border-color:#b9c6ff; box-shadow: 0 0 0 4px rgba(139, 167, 255, 0.25); }
+    button{
+      padding:12px 14px;
+      border-radius:14px;
+      border:1px solid #ddd;
+      cursor:pointer;
+      background: linear-gradient(135deg, #111827, #374151);
+      color:#fff;
+      font-weight:650;
+    }
+    button:disabled{ opacity:.6; cursor:not-allowed; }
+    .footer{
+      margin-top:10px;
+      font-size:12px;
+      color:var(--muted);
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    /* typing dots */
+    .typing{
+      display:inline-flex; gap:5px; align-items:center;
+    }
+    .dot{
+      width:6px; height:6px; border-radius:999px;
+      background:#9ca3af;
+      animation: bounce 0.9s infinite ease-in-out;
+    }
+    .dot:nth-child(2){ animation-delay: .15s; }
+    .dot:nth-child(3){ animation-delay: .3s; }
+    @keyframes bounce{
+      0%, 80%, 100%{ transform: translateY(0); opacity:.6; }
+      40%{ transform: translateY(-5px); opacity:1; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <div class="top">
-      <h2 style="margin:0;">InfoBot: RP Demo</h2>
-      <span class="badge">Webhook → AI → Reply</span>
+      <div class="title">
+        <div class="logo">iB</div>
+        <div>
+          <h2 style="margin:0;">InfoBot: RP Demo</h2>
+          <div style="color:#6b7280; font-size:13px; margin-top:2px;">Ask about diplomas, facilities, directions, official links.</div>
+        </div>
+      </div>
+      <div class="badge">🧠 <span>Webhook → AI → Reply</span></div>
     </div>
 
-    <div id="chat" class="card"></div>
+    <div class="card">
+      <div class="meta">
+        <div>Try these quick questions 👇</div>
+        <div id="status">Status: ready</div>
+      </div>
 
-    <div class="row">
-      <input id="msg" placeholder="Ask something (e.g., Where is RP?)" />
-      <button id="send">Send</button>
+      <div class="chips" id="chips">
+        <div class="chip">Where is RP?</div>
+        <div class="chip">How do I get to RP by MRT?</div>
+        <div class="chip">What diplomas are offered?</div>
+        <div class="chip">Give me official RP website link</div>
+      </div>
+
+      <div style="height:12px;"></div>
+      <div id="chat"></div>
+
+      <div class="row">
+        <input id="msg" placeholder="Type a question (Enter to send)..." />
+        <button id="send">Send</button>
+      </div>
+
+      <div class="footer">
+        <span>✨ Demo mode: RP only</span>
+        <span>Tip: If it fails on website but works on Thunder Client → it’s usually CORS.</span>
+      </div>
     </div>
-    <p style="color:#666; font-size:13px;">
-      Tip: If it says “CORS error”, we’ll fix with 1 setting in n8n or a proxy.
-    </p>
   </div>
 
 <script>
-  // ✅ PASTE YOUR PRODUCTION URL HERE (must be /webhook/ not /webhook-test/)
+  // ✅ Your production webhook URL (must be /webhook/ not /webhook-test/)
   const WEBHOOK_URL = "https://n8ngc.codeblazar.org/webhook/rp-chat";
 
   const chat = document.getElementById("chat");
   const input = document.getElementById("msg");
   const btn = document.getElementById("send");
+  const status = document.getElementById("status");
 
   function add(text, who) {
     const div = document.createElement("div");
@@ -51,19 +210,34 @@
     div.textContent = text;
     chat.appendChild(div);
     chat.scrollTop = chat.scrollHeight;
+    return div;
   }
 
-  async function send() {
-    const message = input.value.trim();
+  function setStatus(text){ status.textContent = "Status: " + text; }
+
+  function typingBubble() {
+    const div = document.createElement("div");
+    div.className = "msg bot";
+    div.innerHTML = `
+      <span class="typing">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </span>
+    `;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+    return div;
+  }
+
+  async function send(customMsg) {
+    const message = (customMsg ?? input.value).trim();
     if (!message) return;
+
     input.value = "";
     add(message, "me");
 
-    const typing = document.createElement("div");
-    typing.className = "msg bot";
-    typing.textContent = "Typing…";
-    chat.appendChild(typing);
-    chat.scrollTop = chat.scrollHeight;
+    btn.disabled = true;
+    setStatus("thinking…");
+    const typing = typingBubble();
 
     try {
       const res = await fetch(WEBHOOK_URL, {
@@ -72,17 +246,36 @@
         body: JSON.stringify({ message })
       });
 
-      const data = await res.json();
-      typing.textContent = data.reply || "(No reply returned)";
+      // handle non-JSON or errors cleanly
+      const text = await res.text();
+      let data = {};
+      try { data = JSON.parse(text); } catch { data = { reply: text }; }
+
+      typing.remove();
+      add(data.reply || "(No reply returned)", "bot");
+      setStatus("ready");
     } catch (e) {
-      typing.textContent = "Error: couldn't reach webhook (likely CORS or workflow not active).";
+      typing.remove();
+      add("😵 Error: couldn’t reach webhook (likely CORS, or workflow not active/published).", "bot");
+      setStatus("error");
+    } finally {
+      btn.disabled = false;
+      input.focus();
     }
   }
 
-  btn.onclick = send;
+  btn.onclick = () => send();
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
 
-  add("Hi! I’m InfoBot (RP). Ask me about RP stuff 😊", "bot");
+  // chips click => auto send
+  document.getElementById("chips").addEventListener("click", (e) => {
+    const chip = e.target.closest(".chip");
+    if (!chip) return;
+    send(chip.textContent);
+  });
+
+  // welcome
+  add("Hi! I’m InfoBot (RP). Ask me anything about RP 😊", "bot");
 </script>
 </body>
 </html>
