@@ -196,7 +196,6 @@
   </div>
 
 <script>
-  // ✅ Your production webhook URL (must be /webhook/ not /webhook-test/)
   const WEBHOOK_URL = "https://n8ngc.codeblazar.org/webhook/rp-chat";
 
   const chat = document.getElementById("chat");
@@ -229,7 +228,9 @@
   }
 
   async function send(customMsg) {
-    const message = (customMsg ?? input.value).trim();
+    let message = (customMsg ?? input.value ?? "").trim();
+
+    // 🔒 HARD GUARD: never send empty / vague messages
     if (!message) return;
 
     input.value = "";
@@ -246,17 +247,14 @@
         body: JSON.stringify({ message })
       });
 
-      // handle non-JSON or errors cleanly
-      const text = await res.text();
-      let data = {};
-      try { data = JSON.parse(text); } catch { data = { reply: text }; }
+      const data = await res.json();
 
       typing.remove();
       add(data.reply || "(No reply returned)", "bot");
       setStatus("ready");
     } catch (e) {
       typing.remove();
-      add("😵 Error: couldn’t reach webhook (likely CORS, or workflow not active/published).", "bot");
+      add("😵 Error contacting server.", "bot");
       setStatus("error");
     } finally {
       btn.disabled = false;
@@ -267,14 +265,12 @@
   btn.onclick = () => send();
   input.addEventListener("keydown", (e) => { if (e.key === "Enter") send(); });
 
-  // chips click => auto send
   document.getElementById("chips").addEventListener("click", (e) => {
     const chip = e.target.closest(".chip");
     if (!chip) return;
-    send(chip.textContent);
+    send(chip.textContent.trim());
   });
 
-  // welcome
   add("Hi! I’m InfoBot (RP). Ask me anything about RP 😊", "bot");
 </script>
 </body>
